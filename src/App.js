@@ -1,83 +1,106 @@
-import React, { Component } from 'react';
-import './App.css';
+import React, { Component } from "react";
+import "./App.css";
 
 const apiUrl = "http://ctp-zip-api.herokuapp.com/city/";
+const url = "http://ctp-zip-api.herokuapp.com/zip/";
 
-const CitySearchFeild = (props) => {
-  const handleChange = (event) => {
+// search feild
+const CitySearchFeild = props => {
+  const handleChange = event => {
     props.updateTarget(event.target.value);
+  };
+
+  return (
+    <div>
+      <input placeholder="Enter city" onChange={handleChange.bind(this)} />
+    </div>
+  );
+};
+
+// zip component
+const Zip = ({ zips }) => {
+  return (
+    <div>
+      {zips.map((zip, key) => (
+        <City key={key} zipCode={zip} />
+      ))}
+    </div>
+  );
+};
+
+class City extends Component {
+  constructor(props) {
+    super(props);
+    this.state = {
+      city: []
+    };
   }
 
-  return (
-    <div>
-      <input placeholder="Enter city" onChange={handleChange.bind(this)}/>
-    </div>
-  )
-}
+  componentDidMount() {
+    fetch(url + this.props.zipCode)
+      .then(response => {
+        return response.json();
+      })
+      .then(data => {
+        console.log(data[0]);
+        this.setState({ city: data[0] });
+      })
+      .then(() => {
+        console.log(this.state);
+      })
+      .catch(err => console.log(err));
+  }
 
-const Zip = ({zips}) => {
-  // /* <City key={key} zipCode={zip}/> */
-  return (
-    <div>
-      {zips.map((zip, key) => 
-        <div key={key}>{zip}</div>
-      )}
-    </div>
-  )
+  render() {
+    return (
+      <div
+        className="row justify-content-center"
+        key={this.state.city.RecordNumber}
+      >
+        <div className="card col-lg-4 col-md-4">
+          <div className="card-header">{this.state.city.LocationText}</div>
+          <ul>
+            <li>State: {this.state.city.State}</li>
+            <li>
+              Location: ({this.state.city.Lat}, {this.state.city.Long})
+            </li>
+            <li>Population: {this.state.city.EstimatedPopulation}</li>
+            <li>Total Wages: {this.state.city.TotalWages}</li>
+          </ul>
+        </div>
+      </div>
+    );
+  }
 }
-
-// const City = (props) => {
-//   const url = "http://ctp-zip-api.herokuapp.com/zip/";
-//   let city = '';
-//    const searchZipApi = (zipCode) =>{
-//     console.log(zipCode)
-//     fetch(url + zipCode)
-//       .then((response) => {
-//         return response.json();
-//       })
-//       .then((data) => {
-//         city = data;
-//       })
-//       .catch(err => console.log(err))
-// }
-//   // return (<div />)
-// console.log(props.zipCode)
-//   // city = searchZipApi(props.zipCode)
-//   // if(!city)
-//   //   return <div>loading</div>
-//   // else
-//     return <div>city</div>;
-// }
 
 class App extends Component {
   constructor(props) {
     super(props);
 
     this.state = {
-      zips : [],
+      zips: []
       // city : "",
-    }
-
+    };
   }
 
   // call api to fetch
   searchCityApi(city) {
-    this.setState({zips : [] })
+    this.setState({ zips: [] });
     fetch(apiUrl + city)
-      .then((response) => {
+      .then(response => {
         return response.json();
       })
-      .then((data) => {
+      .then(data => {
         this.setState({
-          zips : data,
+          zips: data
         });
       })
       .then(() => {
         console.log(this.state);
       })
-      .catch((err) => {
+      .catch(err => {
         console.log(err);
-      })
+      });
   }
 
   render() {
@@ -86,8 +109,10 @@ class App extends Component {
         <div className="App-header">
           <h1>City Search</h1>
         </div>
-        <CitySearchFeild updateTarget = {(response) => this.searchCityApi(response.toUpperCase())}/>
-        <Zip zips={this.state.zips}/>
+        <CitySearchFeild
+          updateTarget={response => this.searchCityApi(response.toUpperCase())}
+        />
+        <Zip zips={this.state.zips} />
       </div>
     );
   }
